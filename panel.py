@@ -96,11 +96,7 @@ class Panel(gsignal.DGcommons):
         '''
 
         #TODO: consertar esta desgraça de gambiarra que estou fazendo:
-        scrolllist=[]
         Panel.DEBUGAUDIOTRACK= trackables
-        for track in Panel.DEBUGAUDIOTRACK.tracklist:
-            scrolllist.append(track.name)
-        ###FIM DA GAMBIARRA###
 
         self.active= False
         self.mouse_over= False
@@ -110,7 +106,7 @@ class Panel(gsignal.DGcommons):
                 
         if self.name == "Audio":
             widget_list+= [
-                widget.Scrollbar("Track:", self.color, scrolllist, True, Panel.DEBUGAUDIOTRACK) , #trackables[0] seja o nome do audio track
+                widget.Scrollbar("Track:", self.color, Panel.DEBUGAUDIOTRACK.tracknames, True, Panel.DEBUGAUDIOTRACK) , #trackables[0] seja o nome do audio track
                 widget.StaticGraph( self.color, [-1, 1], ["Tempo", "Intensidade"], Panel.DEBUGAUDIOTRACK.loaded, Panel.DEBUGAUDIOTRACK) ,
                 None ,
                 None ,
@@ -170,9 +166,6 @@ class Panel(gsignal.DGcommons):
                             "type": gsignal.ACTION ,
                             "target": self } )
                         self.gsend(self.display, signal)
-
-    def set_listener(self, listener):
-        pass
     
     def update(self):
         

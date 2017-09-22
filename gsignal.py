@@ -120,3 +120,8 @@ class DGcommons:
         signal= Signal(*paramdict.values())
         
         return signal
+
+class Trackable:
+
+    def __init__(self, content):
+        self.content= content

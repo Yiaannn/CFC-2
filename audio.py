@@ -6,7 +6,7 @@ class Sample:
     #samples serão 16 milisec, mesma do main
     
     fs=48000
-    size=364 #(fs*(8/1000))
+    size=728 #(fs*(16/1000))
 
     def __init__(self, audio):
         self.audio=audio
@@ -40,7 +40,8 @@ class AudioTrack:
     rectick= 0
     mode= 0 #0: idle 1: playing 2: recording -1:testes
     recbuffer=[ [], [] ]
-    testlist=[]    
+    testlist=[]
+    tracknames=gsignal.Trackable([])
 
     def gsend(listener, signal):
             listener.gread(signal)
@@ -80,6 +81,7 @@ class AudioTrack:
             AudioTrack.generate(['sineWave'], [987.767], 10, 'Si')
         ]
 
+        AudioTrack.updateTrackNames()
         AudioTrack.loaded=AudioTrack.tracklist[0]
 
         #TODO:Request display para fazer o panel
@@ -95,8 +97,10 @@ class AudioTrack:
             for channel in channels:
                 samples.append(channel[i])
             self.track+=AudioTrack.addSamples(samples)
+        self.track=AudioTrack.normalize(self.track)
 
     def update():
+        '''
         if (AudioTrack.mode==2):
 
             AudioTrack.recbuffer[AudioTrack.rectick]= sd.rec(364)
@@ -108,12 +112,33 @@ class AudioTrack:
             if (len(AudioTrack.recbuffer[AudioTrack.rectick]) != 0):
 
                 flat_list = [item for sublist in AudioTrack.recbuffer[AudioTrack.rectick] for item in sublist]
-                AudioTrack.recorded.append(flat_list)
+                #TODO descobrir a melhor forma de gravar som intercaladamente
+                #AudioTrack.recorded.append(flat_list*2)
+                AudioTrack.recorded.append(flat_list+[0]*364)
 
                 signal= gsignal.build( {
                     "type": gsignal.ACTION ,
                     "content": flat_list} )
                 AudioTrack.gsend(AudioTrack.listeners[1], signal)
+        '''
+        if (AudioTrack.mode==2):
+            counter= AudioTrack.rectick-1
+            if (counter >= 0):
+                tmp=AudioTrack.testlist[counter*728 : (counter+1)*728]
+                flat_list = [item for sublist in tmp for item in sublist]
+                AudioTrack.recorded.append(flat_list)
+                signal= gsignal.build( {
+                    "type": gsignal.ACTION ,
+                    "content": flat_list} )
+                AudioTrack.gsend(AudioTrack.listeners[1], signal)
+            
+
+            AudioTrack.rectick+= 1
+
+    def updateTrackNames():
+        AudioTrack.tracknames.content=[]
+        for track in AudioTrack.tracklist:
+            AudioTrack.tracknames.content.append(track.name)
 
     def save():
         #TODO: pegar o AudioTrack gravado e salvar na tracklist
@@ -122,9 +147,10 @@ class AudioTrack:
         
         AudioTrack.recorded= []
         AudioTrack.tracklist.append(AudioTrack(channels, "default-saved"))
+        AudioTrack.updateTrackNames()
     
     def load(audiotrack):
-        Audiotrack.loaded= audiotrack
+        AudioTrack.loaded= audiotrack
 
     #def playStep(self, step):
     #    sd.play(self.track[step], AudioTrack.fs)
@@ -134,19 +160,20 @@ class AudioTrack:
         sd.play(AudioTrack.loaded)
 
     def addSamples(samples):
-        #add samples
         result=[]
         for i in range(Sample.size):
             result.append(0)
             for sample in samples:
                 result[i]+=sample[i]
 
-        #normalize
-        normalizer=max(result)
-        for i in range(Sample.size):
-            result[i]/=normalizer
-
         return result
+
+    def normalize(track):
+        normalizer= max(track)
+        for i in range(len(track)):
+            track[i]/=normalizer
+
+        return track
 
     def generate(waveform, freq, duration, name):
         #waveform e freq são listas, um valor para cada canal
@@ -171,15 +198,21 @@ class AudioTrack:
         if signal.type == gsignal.ACTION2:
             if (AudioTrack.mode == 0):
                 AudioTrack.mode= 2
+                AudioTrack.testlist= sd.rec(480000)
             elif(AudioTrack.mode == 2):
                 AudioTrack.mode= 0
+                sd.stop()
             else:
                 print("Erro: Não foi iniciar uma gravação, o controlador de áudio está ocupado")
                 #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
 
         if signal.type == gsignal.SAVE:
             if (AudioTrack.mode == 0):
-                AudioTrack.save()
+                if len(AudioTrack.recorded)!=0:
+                    AudioTrack.save()
+                else:
+                    print("Erro: Não há amostra de som para salvar")
+                    #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
             else:
                 print("Erro: Não foi possível salvar a ammostra de som, está certo de que ainda não está gravando?")
                 #TODO: fazer display gráfico do erro, usar algo estilo toast em android?

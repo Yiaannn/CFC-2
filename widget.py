@@ -370,7 +370,7 @@ class BoundButton(Widget):
 class Scrollbar(Widget):
     HEIGTH= BASE_HEIGTH*SIZE
     
-    def __init__(self, text, color, scrollist, return_index, listener):
+    def __init__(self, text, color, trackablelist, return_index, listener):
         #self.listeners= []
         #self.gjoin(listener)
         self.listener= listener
@@ -381,7 +381,7 @@ class Scrollbar(Widget):
         self.text_color= Gcolor.darken( self.highlight_color, 0.1)
         self.header= self.FONT.render(text, True, self.text_color)
         
-        self.scrollist= scrollist
+        self.trackablelist= trackablelist
         self.return_index= return_index
         
         self.tick= 0
@@ -395,14 +395,14 @@ class Scrollbar(Widget):
         pygame.draw.rect(self.canvas,  self.color.get(), ((0, 0), (self.WIDTH, self.BASE_HEIGTH*self.SIZE)) )
         
         self.canvas.blit(self.header, (self.TAB,0))
-        if len( self.scrollist)!= 0:
+        if len( self.trackablelist.content)!= 0:
             #content= self.FONT.render(str(self.scrollist[self.tick]), True, self.scrollist[self.tick].color.get())
-            content= self.FONT.render(str(self.scrollist[self.tick]), True, self.highlight_color)
+            content= self.FONT.render(str(self.trackablelist.content[self.tick]), True, self.highlight_color)
             self.canvas.blit( content, (self.header.get_width()+ 2*self.TAB, 0))
 
     def retarget(self):
-        self.tick%= len(self.scrollist)
-        self.target= self.scrollist[self.tick]
+        self.tick%= len(self.trackablelist.content)
+        self.target= self.trackablelist.content[self.tick]
         if self.return_index:
             self.target= self.tick
         
