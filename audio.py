@@ -1,20 +1,17 @@
 import math
 import sounddevice as sd
 import gsignal
-#TODO:DEBUG
-import gtime
 
 class Sample:
     #samples serão 16 milisec, mesma do main
     
     fs=48000
-    size=768 #(fs*(16/1000))
+    size=364 #(fs*(8/1000))
 
     def __init__(self, audio):
         self.audio=audio
 
     def generate(waveform, freq, offset=0):
-        #TODO: implementar offset
 
         if(waveform=="sineWave"):
             i=0
@@ -34,25 +31,23 @@ class Sample:
 
 class AudioTrack:
     #audiotracks tem sequencias de samples em vários canais
-    fs=48000
+
     tracklist=[]
     loaded=None
-    listener=None
+    recorded=[]
+    listeners=[]
     tick= 0
     rectick= 0
-    mode= 0 #0: idle 1: playing 2: recording 3:testes
+    mode= 0 #0: idle 1: playing 2: recording -1:testes
     recbuffer=[ [], [] ]
-    recordedAudio=[]
     testlist=[]    
 
-    def send(signal):
-        pass
-
-    def send2(signal):
-        pass
+    def gsend(listener, signal):
+            listener.gread(signal)
 
     def init():
-        sd.default.samplerate= AudioTrack.fs
+        fs=48000
+        sd.default.samplerate= fs
         sd.default.channels= 1
 
         AudioTrack.tracklist=[
@@ -113,11 +108,20 @@ class AudioTrack:
             if (len(AudioTrack.recbuffer[AudioTrack.rectick]) != 0):
 
                 flat_list = [item for sublist in AudioTrack.recbuffer[AudioTrack.rectick] for item in sublist]
+                AudioTrack.recorded.append(flat_list)
 
                 signal= gsignal.build( {
                     "type": gsignal.ACTION ,
                     "content": flat_list} )
-                AudioTrack.send2(signal)
+                AudioTrack.gsend(AudioTrack.listeners[1], signal)
+
+    def save():
+        #TODO: pegar o AudioTrack gravado e salvar na tracklist
+        channels=[]
+        channels.append(AudioTrack.recorded)
+        
+        AudioTrack.recorded= []
+        AudioTrack.tracklist.append(AudioTrack(channels, "default-saved"))
     
     def load(audiotrack):
         Audiotrack.loaded= audiotrack
@@ -126,7 +130,6 @@ class AudioTrack:
     #    sd.play(self.track[step], AudioTrack.fs)
 
     def play():
-        #TODO: descobrir porque não funciona sem o wait
         #TODO: tratar o caso loaded=None
         sd.play(AudioTrack.loaded)
 
@@ -159,15 +162,27 @@ class AudioTrack:
 
         return AudioTrack(channels, name)
 
-    def read_signal(signal):
+    def gread(signal):
+        #TODO:Eu preciso uma forma melhor  de ordenar meus listeners, mas por enquanto 0 eh o static e 1 o dynamic
+        #TODO: este eh um ponto de falha, mudar os nodes ligados podem mudar a ordem estabelecida
         if signal.type == gsignal.ACTION:
             AudioTrack.play()
 
         if signal.type == gsignal.ACTION2:
-            if (AudioTrack.mode != 2):
+            if (AudioTrack.mode == 0):
                 AudioTrack.mode= 2
-            else:
+            elif(AudioTrack.mode == 2):
                 AudioTrack.mode= 0
+            else:
+                print("Erro: Não foi iniciar uma gravação, o controlador de áudio está ocupado")
+                #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
+
+        if signal.type == gsignal.SAVE:
+            if (AudioTrack.mode == 0):
+                AudioTrack.save()
+            else:
+                print("Erro: Não foi possível salvar a ammostra de som, está certo de que ainda não está gravando?")
+                #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
             
             
 
@@ -177,15 +192,7 @@ class AudioTrack:
             signal= gsignal.build( {
                 "type": gsignal.RESET ,
                 "content": AudioTrack.loaded } )
-            AudioTrack.send(signal)
-
-    def set_listener(listener):
-        #AudioTrack.listener= listener
-        AudioTrack.send=listener.read_signal
-
-    def set_listener2(listener):
-        #AudioTrack.listener= listener
-        AudioTrack.send2=listener.read_signal
+            AudioTrack.gsend(AudioTrack.listeners[0], signal)
 
     def __getitem__(self, key):
         return self.track[key]

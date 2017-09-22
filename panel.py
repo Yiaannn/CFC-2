@@ -24,9 +24,11 @@ class Banner():
         pygame.draw.rect(self.canvas, self.color.get(), ( (Banner.STRAP_WIDTH, 0), (Banner.WIDTH-Banner.STRAP_WIDTH, Banner.HEIGTH) ) )
         self.canvas.blit(self.text, (Banner.STRAP_WIDTH*2, 0) )
         
-class Body():
+class Body(gsignal.DGcommons):
     
     def __init__(self, text, text_color, color, widget_list):
+        self.listeners= []
+
         self.widget_list= widget_list
         self.WIDTH= widget.WIDTH
         self.HEIGTH= len(widget_list)*widget.BASE_HEIGTH
@@ -45,18 +47,18 @@ class Body():
             if self.widget_list[i] and i !=0:
                 pygame.draw.aaline(self.canvas, Gcolor.darken(self.color.illuminate(), 0.4), (widget.Widget.TAB, widget.Widget.BASE_HEIGTH*i), (widget.Widget.WIDTH - 2*widget.Widget.TAB, widget.Widget.BASE_HEIGTH*i), True)
                 
-    def read_signal(self, signal):
+    def gread(self, signal):
         if signal.type == gsignal.CLICK or signal.type == gsignal.LCLICK:
             unit= signal.position.y//widget.Widget.BASE_HEIGTH
             if unit < len(self.widget_list):
                 while not self.widget_list[unit]:
                     unit-= 1
                 signal= gsignal.edit(signal, ["position", "y"], signal.position.y - unit*widget.Widget.BASE_HEIGTH)
-                self.widget_list[unit].read_signal(signal)
+                self.widget_list[unit].gread(signal)
             
         
 
-class Panel:
+class Panel(gsignal.DGcommons):
     WIDTH= Banner.WIDTH
     HEIGTH= 10*Banner.HEIGTH
     BANNER_HEIGTH= 60
@@ -75,15 +77,16 @@ class Panel:
 
     DEBUGAUDIOTRACK=None
         
-    def __init__(self, canvas, name, color, index, listener, trackables):
-        
+    def __init__(self, canvas, name, color, index, display, trackables):
+        self.listeners= []        
+
         self.canvas= canvas
         self.name= name
         self.color= color
         self.text_color= Gcolor.darken( self.color.mix(self.color.WHITE, 0.5), 0.1 )
         self.text=  self.FONT.render(name, True, self.text_color)
         self.index= index
-        self.listener= listener
+        self.display= self.gjoin(display)
         
         widget_list=[ widget.Label(self.name, self.color) ]
         '''
@@ -122,7 +125,8 @@ class Panel:
                 None ,
                 None ,
                 None ,
-                widget.BoundButton('Record', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION2) ]
+                widget.BoundButton('Record', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION2),
+                widget.BoundButton('Save', self.color, Panel.DEBUGAUDIOTRACK, gsignal.SAVE) ]
 
         '''
         if self.ptype == "Erase":
@@ -135,9 +139,10 @@ class Panel:
         #    widget_list+= [
             
         self.banner= Banner(self.text, self.color, pygame.Surface((Banner.WIDTH, Banner.HEIGTH) ) )
-        self.body= Body( self.text, self.text_color, self.color, widget_list)
+
+        self.body= self.gjoin(Body( self.text, self.text_color, self.color, widget_list))
         
-    def  read_signal(self, signal):
+    def  gread(self, signal):
         if not self.busy:
             if not self.active:
                 if signal.type == gsignal.MOVE:
@@ -148,7 +153,7 @@ class Panel:
                     signal= gsignal.build( {
                         "type": gsignal.ACTION ,
                         "target": self } )
-                    self.listener.read_signal(signal)
+                    self.gsend(self.display, signal)
                     
             else:
                 if signal.type == gsignal.MOVE:
@@ -158,13 +163,13 @@ class Panel:
                 if signal.type == gsignal.CLICK or signal.type == gsignal.LCLICK:
                     if signal.position.x >= self.banner.STRAP_WIDTH and signal.position.y >= self.banner.HEIGTH:
                         signal= gsignal.edit(signal, ["position", "x"], signal.position.x - self.banner.STRAP_WIDTH)
-                        self.body.read_signal(signal)
+                        self.gsend(self.body, signal)
                     else:
                         self.busy= True
                         signal= gsignal.build( {
                             "type": gsignal.ACTION ,
                             "target": self } )
-                        self.listener.read_signal(signal)
+                        self.gsend(self.display, signal)
 
     def set_listener(self, listener):
         pass
@@ -207,7 +212,7 @@ class Panel:
                     signal= gsignal.build( {
                         "type": gsignal.REINDEX ,
                         "target": self } )
-                    self.listener.read_signal(signal)
+                    self.gsend(self.display, signal)
         
         self.mouse_over= False
         self.draw()

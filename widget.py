@@ -8,7 +8,7 @@ SIZE= 1
 BASE_HEIGTH= 60
 WIDTH= 1180
     
-class Widget:
+class Widget(gsignal.DGcommons):
     BASE_HEIGTH= 60
     WIDTH= 1180
     TAB= 20
@@ -144,6 +144,8 @@ class DynamicGraph2(Widget):
     FONT= pygame.font.SysFont('verdana',  22)
     
     def __init__(self, color, valuerange, labels, sender):
+        self.listeners= []
+
         self.canvas= pygame.Surface( ( self.WIDTH, self.HEIGTH ) )
         self.color= color
         self.graph_color= self.color.darken(0.05)
@@ -167,13 +169,16 @@ class DynamicGraph2(Widget):
             self.max_value= valuerange[1]
             self.min_is_set= True
             self.max_is_set= True
+        self.content=None
 
         self.xlabel= self.FONT.render(labels[0], True, self.text_color)
         self.ylabel= self.FONT.render(labels[1], True, self.text_color)
         self.ylabel= pygame.transform.rotate(self.ylabel, 90)
         
         #TODO: consertar essa gambiarra de listener2
-        sender.set_listener2(self)
+        self.gjoin(sender)
+
+        self.draw()
         
     def reset(self, content):
         self.content= content
@@ -197,18 +202,19 @@ class DynamicGraph2(Widget):
         self.canvas.blit(self.xlabel, (3*self.TAB, 2*self.TAB+self.gHEIGTH ) )
 
         #draw graph
-        for xlength in range(self.gWIDTH-1):
+        if self.content:
+            for xlength in range(self.gWIDTH-1):
 
-            pointA= (xlength, int( (self.content[ int((len(self.content)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
-            pointB= (xlength+1, int( (self.content[ int((len(self.content)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
-            pygame.draw.aaline(self.graph, self.line_color, pointA, pointB)
+                pointA= (xlength, int( (self.content[ int((len(self.content)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
+                pointB= (xlength+1, int( (self.content[ int((len(self.content)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
+                pygame.draw.aaline(self.graph, self.line_color, pointA, pointB)
             
         
         #draw canvas
         self.canvas.blit(self.graph, (3*self.TAB, self.TAB ) )
         
         
-    def read_signal(self, signal):
+    def gread(self, signal):
         if signal.type == gsignal.ACTION:
             if not self.min_is_set or self.min_value > min(signal.content):
                 #self.min_value= min(signal.content)
@@ -232,6 +238,8 @@ class StaticGraph(Widget):
     FONT= pygame.font.SysFont('verdana',  22)
     
     def __init__(self, color, valuerange, labels, values, sender):
+        self.listeners=[]
+
         self.gWIDTH= self.WIDTH-4*self.TAB
         self.gHEIGTH= self.HEIGTH- 4*self.TAB
 
@@ -257,7 +265,7 @@ class StaticGraph(Widget):
         self.max_value= valuerange[1]
         self.values= values
         
-        sender.set_listener(self)
+        self.gjoin(sender)
 
         self.draw()
         
@@ -294,7 +302,7 @@ class StaticGraph(Widget):
         self.canvas.blit(self.graph, (3*self.TAB, self.TAB ) )
         
         
-    def read_signal(self, signal):
+    def gread(self, signal):
                 
         if signal.type == gsignal.RESET:
             self.reset(signal.content)
@@ -352,17 +360,21 @@ class BoundButton(Widget):
         pygame.draw.rect(self.canvas, self.color, ( (0, 0), (self.WIDTH, self.HEIGTH) ) )
         self.canvas.blit(temp, (self.TAB,0))
         
-    def read_signal(self, signal):
+    def gread(self, signal):
         if signal.type == gsignal.CLICK:
             signal= gsignal.build( {
                 "type": self.signaltype ,
                 "content": None } )
-            self.listener.read_signal(signal)
+            self.gsend(self.listener, signal)
             
 class Scrollbar(Widget):
     HEIGTH= BASE_HEIGTH*SIZE
     
     def __init__(self, text, color, scrollist, return_index, listener):
+        #self.listeners= []
+        #self.gjoin(listener)
+        self.listener= listener
+
         self.canvas= pygame.Surface( ( self.WIDTH, self.HEIGTH ) )
         self.color= color
         self.highlight_color= self.color.mix(self.color.WHITE, 0.5)
@@ -371,8 +383,6 @@ class Scrollbar(Widget):
         
         self.scrollist= scrollist
         self.return_index= return_index
-        #
-        self.send= listener.read_signal
         
         self.tick= 0
         self.target=None
@@ -396,7 +406,7 @@ class Scrollbar(Widget):
         if self.return_index:
             self.target= self.tick
         
-    def read_signal(self, signal):
+    def gread(self, signal):
         if signal.type == gsignal.CLICK:
             self.tick+= 1
             self.retarget()
@@ -404,7 +414,7 @@ class Scrollbar(Widget):
             signal= gsignal.build( {
                 "type": gsignal.SELECT ,
                 "content": self.target } )
-            self.send(signal)
+            self.gsend(self.listener, signal)
             self.draw()
             
         elif signal.type == gsignal.LCLICK:
@@ -414,7 +424,7 @@ class Scrollbar(Widget):
             signal= gsignal.build( {
                 "type": gsignal.SELECT ,
                 "content": self.target } )
-            self.send(signal)
+            self.gsend(self.listener, signal)
             self.draw()
 '''
 class Tool:

@@ -24,7 +24,7 @@ class Display:
     
         if signal.position.x > (Display.WIDTH - Sidebar.WIDTH):
             signal= gsignal.edit(signal, ["position", "x"], signal.position.x - (Display.WIDTH - Sidebar.WIDTH) )
-            Sidebar.read_signal(signal)
+            Sidebar.gread(signal)
         else:
             MainFrame.read_signal(signal)
  
@@ -55,7 +55,10 @@ class Sidebar:
     MENU= []
     active_panel= None
     
+
+    listeners=[]
     def init():
+
         #TODO:depois tirar o audiotrack daqui
         audio.AudioTrack.init()
 
@@ -64,7 +67,7 @@ class Sidebar:
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Create", Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.VENUS, 0.7), 0.7) ), 1, Sidebar) ,
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Erase", Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.MARS, 0.7), 0.7) ), 2, Sidebar) ,
             Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Audio",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.URANUS, 0.7), 0.7) ), 0, Sidebar, audio.AudioTrack) ,
-            Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Recording",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.VENUS, 0.7), 0.7) ), 1, Sidebar, audio.AudioTrack) ]
+            Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Recording",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.MARS, 0.7), 0.7) ), 1, Sidebar, audio.AudioTrack) ]
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Time",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.SATURN, 0.7), 0.7) ), 4, Sidebar) ,
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Save", Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.NEPTUNE, 0.7), 0.7) ), 5, Sidebar) ]
         
@@ -75,7 +78,7 @@ class Sidebar:
         for i in range(len(Sidebar.MENU)):
             Sidebar.MENU[-i-1].update()
             
-    def read_signal(signal):
+    def gread(signal):
         if signal.type == gsignal.ACTION:
             if not Sidebar.active_panel:
                 Sidebar.active_panel= signal.target
@@ -92,8 +95,8 @@ class Sidebar:
             panel_index= signal.position.y//Panel.BANNER_HEIGTH
             
             if not Sidebar.active_panel and panel_index < len(Sidebar.MENU):
-               Sidebar.MENU[panel_index].read_signal(signal)
+               Sidebar.MENU[panel_index].gread(signal)
             elif Sidebar.active_panel:
-                Sidebar.active_panel.read_signal(signal)
+                Sidebar.active_panel.gread(signal)
                 
 Sidebar.init()
