@@ -1,0 +1,5 @@
+Principais TODOs:
+
+TODOs interessantes:
+
+Um slider na gravação para mostrar o tempo máximo que ainda temos

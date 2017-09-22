@@ -35,10 +35,8 @@ class AudioTrack:
 
     tracklist=[]
     loaded=None
-    recorded=[]
     listeners=[]
     tick= 0
-    rectick= 0
     mode= 0 #0: idle 1: playing 2: recording -1:testes
     recbuffer=[]
     tracknames=gsignal.Trackable([])
@@ -100,40 +98,20 @@ class AudioTrack:
         self.track=AudioTrack.normalize(self.track)
 
     def update():
-        '''
         if (AudioTrack.mode==2):
+            tmp=AudioTrack.recbuffer[AudioTrack.tick*728 : (AudioTrack.tick+1)*728]
 
-            AudioTrack.recbuffer[AudioTrack.rectick]= sd.rec(364)
-
-            AudioTrack.rectick+= 1
-            AudioTrack.rectick%= 2
-            
-
-            if (len(AudioTrack.recbuffer[AudioTrack.rectick]) != 0):
-
-                flat_list = [item for sublist in AudioTrack.recbuffer[AudioTrack.rectick] for item in sublist]
-                #TODO descobrir a melhor forma de gravar som intercaladamente
-                #AudioTrack.recorded.append(flat_list*2)
-                AudioTrack.recorded.append(flat_list+[0]*364)
-
+            if(AudioTrack.tick%2==0):
                 signal= gsignal.build( {
                     "type": gsignal.ACTION ,
-                    "content": flat_list} )
-                AudioTrack.gsend(AudioTrack.listeners[1], signal)
-        '''
-        if (AudioTrack.mode==2):
-            counter= AudioTrack.rectick-1
-            if (counter >= 0):
-                tmp=AudioTrack.recbuffer[counter*728 : (counter+1)*728]
-                flat_list = [item for sublist in tmp for item in sublist]
-                AudioTrack.recorded.append(flat_list)
-                signal= gsignal.build( {
-                    "type": gsignal.ACTION ,
-                    "content": flat_list} )
+                    "content": [item for sublist in tmp for item in sublist]} )
                 AudioTrack.gsend(AudioTrack.listeners[1], signal)
             
 
-            AudioTrack.rectick+= 1
+            AudioTrack.tick+= 1
+        if(AudioTrack.tick==660):
+            AudioTrack.tick-=1
+            AudioTrack.mode= 0
 
     def updateTrackNames():
         AudioTrack.tracknames.content=[]
@@ -143,9 +121,11 @@ class AudioTrack:
     def save():
         #TODO: pegar o AudioTrack gravado e salvar na tracklist
         channels=[]
-        channels.append(AudioTrack.recorded)
+        channels.append([])
+        for i in range(AudioTrack.tick):
+            tmp=AudioTrack.recbuffer[ i*728: (i+1)*728]
+            channels[0].append([item for sublist in tmp for item in sublist])
         
-        AudioTrack.recorded= []
         AudioTrack.tracklist.append(AudioTrack(channels, "default-saved"))
         AudioTrack.updateTrackNames()
     
@@ -197,8 +177,8 @@ class AudioTrack:
 
         if signal.type == gsignal.ACTION2:
             if (AudioTrack.mode == 0):
-                print("DEBUG: GRAVANDO")
                 AudioTrack.mode= 2
+                AudioTrack.tick= 0
                 AudioTrack.recbuffer=np.zeros( (480000, 1) )
                 sd.rec(out= AudioTrack.recbuffer)
             elif(AudioTrack.mode == 2):
@@ -210,11 +190,7 @@ class AudioTrack:
 
         if signal.type == gsignal.SAVE:
             if (AudioTrack.mode == 0):
-                if len(AudioTrack.recorded)!=0:
-                    AudioTrack.save()
-                else:
-                    print("Erro: Não há amostra de som para salvar")
-                    #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
+                AudioTrack.save()
             else:
                 print("Erro: Não foi possível salvar a ammostra de som, está certo de que ainda não está gravando?")
                 #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
@@ -223,7 +199,6 @@ class AudioTrack:
 
         if signal.type == gsignal.SELECT:
             AudioTrack.loaded=AudioTrack.tracklist[signal.content]
-            AudioTrack.tick=0
             signal= gsignal.build( {
                 "type": gsignal.RESET ,
                 "content": AudioTrack.loaded } )
