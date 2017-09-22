@@ -1,19 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-import math
-import sounddevice as sd
-
-def makeSineWave(duration, freq):
-    fs = 48000    
-
-    i=0
-    audio=[]
-    while( i!=(fs*duration) ):
-    
-        audio.append( math.sin((i*2*math.pi)*freq/fs)  )
-        i+=1
-    return audio
+import audio
 
 def printWave(audio, escala):
     fs=48000
@@ -40,16 +25,78 @@ def printWave(audio, escala):
     
     print(final)
 
-fs = 48000
+printWave(audio.track1.track, 0.01)
 
-#audio = sd.rec(int(duration*fs), fs, channels=1)
-#audio= makeSineWave(3, 1209000)
-audio= makeSineWave(3, 1)
-sd.wait()
+tmp1= audio.AudioTrack.generate(['sineWave'], [587.33], 30, 'Do')
 
-# reproduz o som
-printWave(audio, 0.01)
-#sd.play(audio, fs)
+tmp2= audio.AudioTrack.generate(['sineWave'], [1046.502], 30, 'Do2')
 
-# aguarda fim da reprodução
-sd.wait()
+audio.trackDo.play()
+audio.trackSilence.play()
+audio.trackDo.play()
+audio.trackSilence.play()
+audio.trackDo.play()
+audio.trackSilence.play()
+audio.trackDo.play()
+audio.trackSilence.play()
+
+
+audio.trackRe.play()
+audio.trackSilence.play()
+audio.trackRe.play()
+audio.trackSilence.play()
+tmp1.play()
+audio.trackSilence.play()
+
+audio.trackMi.play()
+audio.trackSilence.play()
+audio.trackMi.play()
+audio.trackSilence.play()
+audio.trackMi.play()
+audio.trackSilence.play()
+audio.trackMi.play()
+audio.trackSilence.play()
+
+audio.trackFa.play()
+audio.trackSilence.play()
+audio.trackFa.play()
+audio.trackSilence.play()
+audio.trackFa.play()
+audio.trackSilence.play()
+audio.trackFa.play()
+audio.trackSilence.play()
+
+audio.trackSol.play()
+audio.trackSilence.play()
+audio.trackSol.play()
+audio.trackSilence.play()
+audio.trackSol.play()
+audio.trackSilence.play()
+audio.trackSol.play()
+audio.trackSilence.play()
+
+audio.trackLa.play()
+audio.trackSilence.play()
+audio.trackLa.play()
+audio.trackSilence.play()
+audio.trackLa.play()
+audio.trackSilence.play()
+audio.trackLa.play()
+audio.trackSilence.play()
+
+audio.trackSi.play()
+audio.trackSilence.play()
+audio.trackSi.play()
+audio.trackSilence.play()
+audio.trackSi.play()
+audio.trackSilence.play()
+audio.trackSi.play()
+audio.trackSilence.play()
+
+audio.trackDo2.play()
+audio.trackSilence.play()
+audio.trackDo2.play()
+audio.trackSilence.play()
+tmp2.play()
+audio.trackSilence.play()
+audio.trackSilence.play()
