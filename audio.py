@@ -1,6 +1,7 @@
 import math
 import sounddevice as sd
 import gsignal
+import numpy as np
 
 class Sample:
     #samples serão 16 milisec, mesma do main
@@ -39,8 +40,7 @@ class AudioTrack:
     tick= 0
     rectick= 0
     mode= 0 #0: idle 1: playing 2: recording -1:testes
-    recbuffer=[ [], [] ]
-    testlist=[]
+    recbuffer=[]
     tracknames=gsignal.Trackable([])
 
     def gsend(listener, signal):
@@ -124,7 +124,7 @@ class AudioTrack:
         if (AudioTrack.mode==2):
             counter= AudioTrack.rectick-1
             if (counter >= 0):
-                tmp=AudioTrack.testlist[counter*728 : (counter+1)*728]
+                tmp=AudioTrack.recbuffer[counter*728 : (counter+1)*728]
                 flat_list = [item for sublist in tmp for item in sublist]
                 AudioTrack.recorded.append(flat_list)
                 signal= gsignal.build( {
@@ -197,8 +197,10 @@ class AudioTrack:
 
         if signal.type == gsignal.ACTION2:
             if (AudioTrack.mode == 0):
+                print("DEBUG: GRAVANDO")
                 AudioTrack.mode= 2
-                AudioTrack.testlist= sd.rec(480000)
+                AudioTrack.recbuffer=np.zeros( (480000, 1) )
+                sd.rec(out= AudioTrack.recbuffer)
             elif(AudioTrack.mode == 2):
                 AudioTrack.mode= 0
                 sd.stop()
