@@ -149,7 +149,7 @@ class AudioTrack:
         return result
 
     def normalize(track):
-        normalizer= max(track)
+        normalizer= max(  max(track), abs(min(track))  )
         for i in range(len(track)):
             track[i]/=normalizer
 
