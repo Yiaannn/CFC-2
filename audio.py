@@ -2,6 +2,7 @@ import math
 import sounddevice as sd
 import gsignal
 import numpy as np
+import scipy.signal as sig
 
 class Sample:
     #samples serão 16 milisec, mesma do main
@@ -40,6 +41,7 @@ class AudioTrack:
     mode= 0 #0: idle 1: playing 2: recording -1:testes
     recbuffer=[]
     tracknames=gsignal.Trackable([])
+    displayfourierrecord=False
 
     def gsend(listener, signal):
             listener.gread(signal)
@@ -87,7 +89,8 @@ class AudioTrack:
     def __init__(self, channels, name):
         self.channels=channels
         self.name= name
-        
+        self.displayfourier= False
+
         self.track=[] #cada pos equivale às samples já somadas
         
         for i in range(len(channels[0])):
@@ -96,15 +99,33 @@ class AudioTrack:
                 samples.append(channel[i])
             self.track+=AudioTrack.addSamples(samples)
         self.track=AudioTrack.normalize(self.track)
+        fourier= np.fft.rfft(self.track)
+        
+        self.fourier= []        
+        for i in fourier:
+            self.fourier.append(abs(float(i.real)))
+
+        self.fourier=AudioTrack.normalize( self.fourier )
 
     def update():
         if (AudioTrack.mode==2):
             tmp=AudioTrack.recbuffer[AudioTrack.tick*728 : (AudioTrack.tick+1)*728]
 
             if(AudioTrack.tick%2==0):
+                content= [item for sublist in tmp for item in sublist]
+
+                if (AudioTrack.displayfourierrecord):
+                    fourier= np.fft.rfft(content)
+                    content=[]    
+                    for i in fourier:
+                        content.append(abs(float(i.real)))
+
+                    content=AudioTrack.normalize( content )
+
+
                 signal= gsignal.build( {
                     "type": gsignal.ACTION ,
-                    "content": [item for sublist in tmp for item in sublist]} )
+                    "content": content } )
                 AudioTrack.gsend(AudioTrack.listeners[1], signal)
             
 
@@ -149,7 +170,7 @@ class AudioTrack:
         return result
 
     def normalize(track):
-        normalizer= max(  max(track), abs(min(track))  )
+        normalizer= max(  abs(max(track)), abs(min(track))  )
         for i in range(len(track)):
             track[i]/=normalizer
 
@@ -198,16 +219,44 @@ class AudioTrack:
             
 
         if signal.type == gsignal.SELECT:
+            AudioTrack.tracklist[signal.content].displayfourier= AudioTrack.loaded.displayfourier
+            AudioTrack.loaded.displayfourier= False
+
             AudioTrack.loaded=AudioTrack.tracklist[signal.content]
             signal= gsignal.build( {
                 "type": gsignal.RESET ,
                 "content": AudioTrack.loaded } )
             AudioTrack.gsend(AudioTrack.listeners[0], signal)
 
+        if signal.type == gsignal.SELECT2:
+            AudioTrack.loaded.displayfourier=bool(signal.content)
+            signal= gsignal.build( {
+                "type": gsignal.RESET ,
+                "content": AudioTrack.loaded } )
+            AudioTrack.gsend(AudioTrack.listeners[0], signal)
+
+            #TODO DEBUG
+            if(AudioTrack.loaded.displayfourier):
+                print("Picos:")
+                #print( sig.find_peaks_cwt(AudioTrack.loaded.fourier, np.arange(.01,.1,.01) * len(AudioTrack.loaded.fourier)) )
+                tmp=sig.argrelextrema(np.array(AudioTrack.loaded.fourier), np.greater)
+                tmp2=[]
+                for i in range(len(tmp)):
+                    print(type(tmp[i]))
+                    tmp2.append(tmp[i]*1.1)
+                print(tmp2)
+
+        if signal.type == gsignal.SELECT3:
+            AudioTrack.displayfourierrecord= bool(signal.content)
+
     def __getitem__(self, key):
+        if (self.displayfourier):
+            return self.fourier[key]
         return self.track[key]
 
     def __len__(self):
+        if (self.displayfourier):
+            return len(self.fourier)
         return len(self.track)            
 
 trackDo2= AudioTrack.generate(['sineWave'], [1046.502], 10, 'Do2')

@@ -205,8 +205,8 @@ class DynamicGraph2(Widget):
         if self.content:
             for xlength in range(self.gWIDTH-1):
 
-                pointA= (xlength, int( (self.content[ int((len(self.content)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
-                pointB= (xlength+1, int( (self.content[ int((len(self.content)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
+                pointA= (xlength, self.gHEIGTH - ( int( (self.content[ int((len(self.content)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) ) )
+                pointB= (xlength+1, self.gHEIGTH - ( int( (self.content[ int((len(self.content)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) ) )
                 pygame.draw.aaline(self.graph, self.line_color, pointA, pointB)
             
         
@@ -275,8 +275,7 @@ class StaticGraph(Widget):
 
         self.draw()
         
-    def draw(self):
-        
+    def draw(self):      
         #init graph
         pygame.draw.rect(self.graph, self.graph_color, ((0, 0), (self.gWIDTH, self.gHEIGTH)))
         for i in range(10, self.gWIDTH, 10):
@@ -293,8 +292,24 @@ class StaticGraph(Widget):
         #draw graph
         for xlength in range(self.gWIDTH-1):
             #print(self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) ]-(self.min_value )*self.gHEIGTH)
-            pointA= (xlength, int( (self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
-            pointB= (xlength+1, int( (self.values[ int((len(self.values)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
+            
+
+            tmp= self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) : int((len(self.values)-1)*((xlength+1)/self.gWIDTH))]
+            yA= min(tmp)
+            if ( max(tmp) > abs(min(tmp)) ):
+                yA= max(tmp)
+
+            tmp= self.values[ int((len(self.values)-1)*((xlength+1)/self.gWIDTH)) : int((len(self.values)-1)*((xlength+2)/self.gWIDTH))]
+            yB= min(tmp)
+            if ( max(tmp) > abs(min(tmp)) ):
+                yB= max(tmp)
+
+            pointA= (xlength, self.gHEIGTH - ( int( (yA-self.min_value  ) * self.gHEIGTH / (self.max_value - self.min_value) ) ) )
+            pointB= (xlength+1, self.gHEIGTH - ( int( (yB-self.min_value ) * self.gHEIGTH / (self.max_value - self.min_value) ) ) )
+
+            #pointA= (xlength, int( (self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
+            #pointB= (xlength+1, int( (self.values[ int((len(self.values)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
+            
             pygame.draw.aaline(self.graph, self.line_color, pointA, pointB)
             
         
@@ -370,7 +385,7 @@ class BoundButton(Widget):
 class Scrollbar(Widget):
     HEIGTH= BASE_HEIGTH*SIZE
     
-    def __init__(self, text, color, trackablelist, return_index, listener):
+    def __init__(self, text, color, trackablelist, return_index, listener, signal=gsignal.SELECT):
         #self.listeners= []
         #self.gjoin(listener)
         self.listener= listener
@@ -383,6 +398,7 @@ class Scrollbar(Widget):
         
         self.trackablelist= trackablelist
         self.return_index= return_index
+        self.signal= signal
         
         self.tick= 0
         self.target=None
@@ -412,7 +428,7 @@ class Scrollbar(Widget):
             self.retarget()
 
             signal= gsignal.build( {
-                "type": gsignal.SELECT ,
+                "type": self.signal ,
                 "content": self.target } )
             self.gsend(self.listener, signal)
             self.draw()
@@ -422,7 +438,7 @@ class Scrollbar(Widget):
             self.retarget()
 
             signal= gsignal.build( {
-                "type": gsignal.SELECT ,
+                "type": self.signal ,
                 "content": self.target } )
             self.gsend(self.listener, signal)
             self.draw()

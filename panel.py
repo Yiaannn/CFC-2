@@ -106,12 +106,13 @@ class Panel(gsignal.DGcommons):
                 
         if self.name == "Audio":
             widget_list+= [
-                widget.Scrollbar("Track:", self.color, Panel.DEBUGAUDIOTRACK.tracknames, True, Panel.DEBUGAUDIOTRACK) , #trackables[0] seja o nome do audio track
+                widget.Scrollbar("Track:", self.color, Panel.DEBUGAUDIOTRACK.tracknames, True, Panel.DEBUGAUDIOTRACK) ,
                 widget.StaticGraph( self.color, [-1, 1], ["Tempo", "Intensidade"], Panel.DEBUGAUDIOTRACK.loaded, Panel.DEBUGAUDIOTRACK) ,
                 None ,
                 None ,
                 None ,
                 None ,
+                widget.Scrollbar("Display:", self.color, gsignal.Trackable(["Default", "Fourier"]), True, Panel.DEBUGAUDIOTRACK, signal=gsignal.SELECT2) ,
                 widget.BoundButton('Play', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION) ]
 
         if self.name == "Recording":
@@ -122,6 +123,7 @@ class Panel(gsignal.DGcommons):
                 None ,
                 None ,
                 widget.BoundButton('Record', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION2),
+                widget.Scrollbar("Display:", self.color, gsignal.Trackable(["Default", "Fourier"]), True, Panel.DEBUGAUDIOTRACK, signal=gsignal.SELECT3) ,
                 widget.BoundButton('Save', self.color, Panel.DEBUGAUDIOTRACK, gsignal.SAVE) ]
 
         '''

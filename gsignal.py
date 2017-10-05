@@ -16,6 +16,8 @@ DELETE= 12
 SELECT= 13
 ACTION2= 14
 SAVE= 15
+SELECT2= 16
+SELECT3= 17
         
 def build(paramdict):
     for param in paramdict:
