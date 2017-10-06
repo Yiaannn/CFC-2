@@ -108,19 +108,24 @@ class AudioTrack:
         self.fourier=AudioTrack.normalize( self.fourier )
 
     def update():
-        if (AudioTrack.mode==2):
-            tmp=AudioTrack.recbuffer[AudioTrack.tick*728 : (AudioTrack.tick+1)*728]
+        if (AudioTrack.mode==2 and AudioTrack.tick>=2):
+            tmp=AudioTrack.recbuffer[(AudioTrack.tick-2)*728 : (AudioTrack.tick-1)*728]
 
             if(AudioTrack.tick%2==0):
                 content= [item for sublist in tmp for item in sublist]
 
-                if (AudioTrack.displayfourierrecord):
-                    fourier= np.fft.rfft(content)
-                    content=[]    
-                    for i in fourier:
-                        content.append(abs(float(i.real)))
+                tmp= np.fft.rfft(content)
+                fourier=[]    
+                for i in tmp:
+                    fourier.append(abs(float(i.real)))
 
-                    content=AudioTrack.normalize( content )
+                fourier=AudioTrack.normalize( fourier )
+                content=AudioTrack.normalize( content )
+
+                AudioTrack.detectTone(fourier)
+
+                if (AudioTrack.displayfourierrecord):
+                    content=fourier
 
 
                 signal= gsignal.build( {
@@ -129,7 +134,7 @@ class AudioTrack:
                 AudioTrack.gsend(AudioTrack.listeners[1], signal)
             
 
-            AudioTrack.tick+= 1
+        AudioTrack.tick+= 1
         if(AudioTrack.tick==660):
             AudioTrack.tick-=1
             AudioTrack.mode= 0
@@ -168,6 +173,49 @@ class AudioTrack:
                 result[i]+=sample[i]
 
         return result
+
+    def detectTone(fourier):
+        #posso usar uma tolerancia de erro de 10 Hz
+        tones=[697, 770, 852, 941, 1209, 1336, 1477, 1633]
+
+        #print( sig.find_peaks_cwt(AudioTrack.loaded.fourier, np.arange(.01,.1,.01) * len(AudioTrack.loaded.fourier)) )
+        tmp=sig.argrelextrema(np.array(fourier), np.greater)[0]
+        picos=[]
+        for i in range(len(tmp)):
+            for tone in tones:
+                #print(abs(tone-tmp[i]*1.1))
+                if ( ( abs(tone-tmp[i]*1.1) <= 10 ) and  ( tone not in picos ) ):
+                    picos.append(tone)
+        print("Picos detectados: ", picos)
+
+        #usar os picos detectados para relacionar com os tons
+
+        database= [
+            ["1", 697, 1209] ,
+            ["2", 697, 1336] ,
+            ["3", 697, 1477] ,
+            ["A", 697, 1633] ,
+            ["4", 770, 1209] ,
+            ["5", 770, 1336] ,
+            ["6", 770, 1477] ,
+            ["B", 770, 1633] ,
+            ["7", 852, 1209] ,
+            ["8", 852, 1336] ,
+            ["9", 852, 1477] ,
+            ["C", 852, 1633] ,
+            ["*", 941, 1209] ,
+            ["0", 941, 1336] ,
+            ["#", 941, 1477] ,
+            ["D", 941, 1633] ]
+
+        detectados=[]
+
+        for reference in database:
+            if set(reference[1:]).issubset(picos):
+                detectados.append(reference[0])
+
+        print("Tons detectados: ", detectados)
+        
 
     def normalize(track):
         normalizer= max(  abs(max(track)), abs(min(track))  )
@@ -223,6 +271,8 @@ class AudioTrack:
             AudioTrack.loaded.displayfourier= False
 
             AudioTrack.loaded=AudioTrack.tracklist[signal.content]
+            AudioTrack.detectTone(AudioTrack.loaded.fourier)
+
             signal= gsignal.build( {
                 "type": gsignal.RESET ,
                 "content": AudioTrack.loaded } )
@@ -234,17 +284,6 @@ class AudioTrack:
                 "type": gsignal.RESET ,
                 "content": AudioTrack.loaded } )
             AudioTrack.gsend(AudioTrack.listeners[0], signal)
-
-            #TODO DEBUG
-            if(AudioTrack.loaded.displayfourier):
-                print("Picos:")
-                #print( sig.find_peaks_cwt(AudioTrack.loaded.fourier, np.arange(.01,.1,.01) * len(AudioTrack.loaded.fourier)) )
-                tmp=sig.argrelextrema(np.array(AudioTrack.loaded.fourier), np.greater)
-                tmp2=[]
-                for i in range(len(tmp)):
-                    print(type(tmp[i]))
-                    tmp2.append(tmp[i]*1.1)
-                print(tmp2)
 
         if signal.type == gsignal.SELECT3:
             AudioTrack.displayfourierrecord= bool(signal.content)
