@@ -175,16 +175,26 @@ class AudioTrack:
         return result
 
     def detectTone(fourier):
-        #posso usar uma tolerancia de erro de 10 Hz
         tones=[697, 770, 852, 941, 1209, 1336, 1477, 1633]
 
-        #print( sig.find_peaks_cwt(AudioTrack.loaded.fourier, np.arange(.01,.1,.01) * len(AudioTrack.loaded.fourier)) )
-        tmp=sig.argrelextrema(np.array(fourier), np.greater)[0]
+        #TODO: estou certo de que é possível detectar tons de forma bem mais precisa e eficiente que esta
+
+        
+        for i in range(len(fourier)):
+            if fourier[i]<0.1:
+                fourier[i]=0
+        #TODO: DEBUG: testar valores pra order tentando filtrar só os picos de interesse
+        #tmp= sig.find_peaks_cwt( fourier, np.arange(20,200,20) )
+        tmp= sig.argrelextrema(np.array(fourier), np.greater)[0]
+
+        for i in range(len(tmp)):
+            tmp[i]= int( 24000*tmp[i]/len(fourier) )
+
         picos=[]
         for i in range(len(tmp)):
             for tone in tones:
-                #print(abs(tone-tmp[i]*1.1))
-                if ( ( abs(tone-tmp[i]*1.1) <= 10 ) and  ( tone not in picos ) ):
+                #posso usar uma tolerancia de erro de 10%
+                if ( ( abs(tone-tmp[i]) <= 5 ) and  ( tone not in picos ) ):
                     picos.append(tone)
         print("Picos detectados: ", picos)
 
