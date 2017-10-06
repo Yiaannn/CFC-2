@@ -27,7 +27,6 @@ Junto da possibilidade de gerar e tocar áudios, podemos também gravar áudio e
 ## Entrega 2
 
 
+  Para esta segunda entrega, o objetivo é incrementar a entrega passada implementando à recepção da onda, a transformada de Fourier aplicada no sinal recebido.
 
-
-
-Durante a gravação e reprodução pode ser selecionado o domínio em que a onda é vizualizada, podendo ser intensidade (y) por frequência (x) ou intensidade (y) por tempo (x). Quando gravado podemos salvar a gravação, podendo ser reproduzida posteriormente na aba "Audio".
+Agora durante a gravação e reprodução o domínio em que o gráfico é plotado pode ser selecionado, podendo ser intensidade (y) por frequência (x) ou intensidade (y) por tempo (x). Assim que o sinal é recebido, já é aplicada a transformada, detectando assim os sinais senoidais que formam o sinal principal. Quando gravado podemos salvar a gravação, podendo ser reproduzida posteriormente na aba "Audio".
