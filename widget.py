@@ -237,7 +237,7 @@ class StaticGraph(Widget):
     
     FONT= pygame.font.SysFont('verdana',  22)
     
-    def __init__(self, color, valuerange, labels, values, sender):
+    def __init__(self, color, valuerange, labels, trackablegraph, sender):
         self.listeners=[]
 
         self.gWIDTH= self.WIDTH-4*self.TAB
@@ -263,17 +263,21 @@ class StaticGraph(Widget):
         
         self.min_value= valuerange[0]
         self.max_value= valuerange[1]
-        self.values= values
+        self.trackablegraph= trackablegraph
+        self.values=  trackablegraph.content
         
         self.gjoin(sender)
 
         self.draw()
         
-    def reset(self, values):
-        self.graph= pygame.Surface( ( self.gWIDTH, self.gHEIGTH ) )
-        self.values= values
+    def update(self):
+        if ( self.values != self.trackablegraph.content ):
+            print("Debug: estou no update do StaticGraph, atualizando algo")
 
-        self.draw()
+            self.graph= pygame.Surface( ( self.gWIDTH, self.gHEIGTH ) )
+            self.values= self.trackablegraph.content
+
+            self.draw()
         
     def draw(self):      
         #init graph
@@ -295,11 +299,17 @@ class StaticGraph(Widget):
             
 
             tmp= self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) : int((len(self.values)-1)*((xlength+1)/self.gWIDTH))]
+            if (len(tmp) == 0):
+                tmp= [self.values[int((len(self.values)-1)*(xlength/self.gWIDTH)) ]]
+
             yA= min(tmp)
             if ( max(tmp) > abs(min(tmp)) ):
                 yA= max(tmp)
 
             tmp= self.values[ int((len(self.values)-1)*((xlength+1)/self.gWIDTH)) : int((len(self.values)-1)*((xlength+2)/self.gWIDTH))]
+            if (len(tmp) == 0):
+                tmp= [self.values[int((len(self.values)-1)*((xlength+1)/self.gWIDTH))]]
+
             yB= min(tmp)
             if ( max(tmp) > abs(min(tmp)) ):
                 yB= max(tmp)
@@ -319,8 +329,8 @@ class StaticGraph(Widget):
         
     def gread(self, signal):
                 
-        if signal.type == gsignal.RESET:
-            self.reset(signal.content)
+        if signal.type == gsignal.UPDATE:
+            self.update()
         
 class valueTracker(Widget):
     HEIGTH= BASE_HEIGTH*SIZE
@@ -397,10 +407,10 @@ class Scrollbar(Widget):
         self.header= self.FONT.render(text, True, self.text_color)
         
         self.trackablelist= trackablelist
+        self.tick= trackablelist.iterator
         self.return_index= return_index
         self.signal= signal
         
-        self.tick= 0
         self.target=None
 
         self.retarget()
@@ -417,14 +427,22 @@ class Scrollbar(Widget):
             self.canvas.blit( content, (self.header.get_width()+ 2*self.TAB, 0))
 
     def retarget(self):
-        self.tick%= len(self.trackablelist.content)
+        self.tick= self.trackablelist.iterator
+
         self.target= self.trackablelist.content[self.tick]
         if self.return_index:
             self.target= self.tick
+
+    def update(self):
+        if ( self.tick != self.trackablelist.iterator ):
+            print("Debug: estou no update do Scrollbar, atualizando algo")
+            self.retarget()
+            self.draw()
         
     def gread(self, signal):
         if signal.type == gsignal.CLICK:
-            self.tick+= 1
+            self.trackablelist.iterator+= 1
+            self.trackablelist.iterator%= len(self.trackablelist.content)
             self.retarget()
 
             signal= gsignal.build( {
@@ -434,7 +452,8 @@ class Scrollbar(Widget):
             self.draw()
             
         elif signal.type == gsignal.LCLICK:
-            self.tick-= 1
+            self.trackablelist.iterator-= 1
+            self.trackablelist.iterator%= len(self.trackablelist.content)
             self.retarget()
 
             signal= gsignal.build( {
@@ -442,6 +461,9 @@ class Scrollbar(Widget):
                 "content": self.target } )
             self.gsend(self.listener, signal)
             self.draw()
+
+        elif signal.type == gsignal.UPDATE:
+            self.update()
 '''
 class Tool:
 

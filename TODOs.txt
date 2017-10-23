@@ -1,5 +1,7 @@
 Principais TODOs:
 
+Corrigir o botão play que não toca quando o modo é trocado para Fourier
+
 TODOs interessantes:
 
 Um slider na gravação para mostrar o tempo máximo que ainda temos

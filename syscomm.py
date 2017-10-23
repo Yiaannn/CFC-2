@@ -1,5 +1,6 @@
 import gsignal
 import pygame
+import os
 
 class Mouse:
     listener=None
@@ -71,3 +72,8 @@ class SysComm:
             if SysComm.event_stack[0].type == pygame.QUIT:
                 SysComm.quit= True
             SysComm.event_stack.pop(0)
+
+    def listdirectory(path):
+
+        path+="/"
+        return os.listdir(path)

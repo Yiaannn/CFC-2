@@ -18,6 +18,10 @@ ACTION2= 14
 SAVE= 15
 SELECT2= 16
 SELECT3= 17
+SELECT4= 18
+SELECT5= 19
+ACTION3= 20
+UPDATE= 21
         
 def build(paramdict):
     for param in paramdict:
@@ -127,3 +131,4 @@ class Trackable:
 
     def __init__(self, content):
         self.content= content
+        self.iterator= 0

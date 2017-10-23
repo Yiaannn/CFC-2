@@ -67,7 +67,8 @@ class Sidebar:
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Create", Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.VENUS, 0.7), 0.7) ), 1, Sidebar) ,
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Erase", Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.MARS, 0.7), 0.7) ), 2, Sidebar) ,
             Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Audio",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.URANUS, 0.7), 0.7) ), 0, Sidebar, audio.AudioTrack) ,
-            Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Recording",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.MARS, 0.7), 0.7) ), 1, Sidebar, audio.AudioTrack) ]
+            Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Modulation",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.VENUS, 0.7), 0.7) ), 1, Sidebar, audio.AudioTrack) ,
+            Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Recording",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.MARS, 0.7), 0.7) ), 2, Sidebar, audio.AudioTrack) ]
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Time",  Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.SATURN, 0.7), 0.7) ), 4, Sidebar) ,
             #Panel(Sidebar.CANVAS.subsurface( (0, 0), (Panel.WIDTH, Panel.HEIGTH) ), "Save", Gcolor( Gcolor.darken( Gcolor.chill(Gcolor.NEPTUNE, 0.7), 0.7) ), 5, Sidebar) ]
         
