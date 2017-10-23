@@ -37,3 +37,14 @@ Abaixo podemos observar a transformada de Fourier para a onde gerada, seguida pe
 Agora durante a gravação e reprodução o domínio em que o gráfico é plotado pode ser selecionado, podendo ser intensidade (y) por frequência (x) ou intensidade (y) por tempo (x). Assim que o sinal é recebido, já é aplicada a transformada, detectando assim os sinais senoidais que formam o sinal principal. Quando gravado podemos salvar a gravação, podendo ser reproduzida posteriormente na aba "Audio".
 
 O restante do programa permanece com as funções iguais à entrega anterior.
+
+
+
+
+## Entrega 3
+
+### Introdução
+A entrega 3 deste projeto consiste em incrementar ao projeto um protocolo de modulação AM aos sinais sonoros. A modulação AM consiste em alterar a amplitude de um sinal a fim de um receptor ser capaz de decodificar um sinal transmitido específico, com isso é possível compartilhar um mesmo meio para transmissão de diversos sinais.
+
+### Modulação e demodulação
+Em nosso programa, a modulação foi realizada multiplicando um sinal ponto a ponto pelo sinal da onda portadora, gerando assim o sinal modulado. A demodulação foi realizada utilizando a opreação contrária, dividindo-se o sinal modulado ponto a ponto pelo sinal portador, realizando as normalizações necessárias. As bandas utilizadas são selecionadas automaticamente através de um cálculo das frequências do sinal principal, de modo que na demodulação não seja criado nenhum conflito nas frequências. Adicionalmente o programa detecta automaticamente os sinais portadores na demodulação, não precisando escrevê-los manualmente.
