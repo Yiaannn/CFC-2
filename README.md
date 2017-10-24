@@ -44,7 +44,7 @@ O restante do programa permanece com as funções iguais à entrega anterior.
 ## Entrega 3
 
 ### Introdução
-A entrega 3 deste projeto consiste em incrementar ao projeto um protocolo de modulação AM aos sinais sonoros. A modulação AM consiste em alterar a amplitude de um sinal a fim de um receptor ser capaz de decodificar um sinal específico transmitido, com isso é possível compartilhar um mesmo meio para transmissão de diversos sinais com diversos tipos de informação.
+A entrega 3 deste projeto consiste em incrementar ao projeto um protocolo de modulação de amplitude (AM) aos sinais sonoros. A modulação de amplitude consiste em alterar a amplitude de um sinal a fim de um receptor ser capaz de decodificar um sinal específico transmitido, com isso é possível compartilhar um mesmo meio para transmissão de diversos sinais com diversos tipos de informação.
 
 ### Modulação e demodulação
 Em nosso programa, a modulação foi realizada multiplicando um sinal ponto a ponto pelo sinal da onda portadora, gerando assim o sinal modulado. A demodulação foi realizada utilizando a opreação contrária, dividindo-se o sinal modulado ponto a ponto pelo sinal portador, realizando as normalizações necessárias. As bandas utilizadas são selecionadas automaticamente através de um cálculo das frequências do sinal principal, de modo que na demodulação não seja criado nenhum conflito nas frequências. Adicionalmente o programa detecta automaticamente os sinais portadores na demodulação, não precisando escrevê-los manualmente.
