@@ -138,6 +138,30 @@ class Panel(gsignal.DGcommons):
                 widget.Scrollbar("Set as:", self.color, gsignal.Trackable(["Signal", "Carrier"]), True, Panel.DEBUGAUDIOTRACK, signal=gsignal.SELECT4) ,
                 widget.BoundButton('Save', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION3) ]
 
+        if self.name == "Demodulation":
+            widget_list+= [
+                widget.Scrollbar("Track:", self.color, Panel.DEBUGAUDIOTRACK.tracknames, True, Panel.DEBUGAUDIOTRACK)  ,
+                widget.StaticGraph( self.color, [-1, 1], ["Tempo", "Intensidade"], Panel.DEBUGAUDIOTRACK.trackablegraph, Panel.DEBUGAUDIOTRACK) ,
+                None ,
+                None ,
+                None ,
+                None ,
+                widget.Scrollbar("Display:", self.color, Panel.DEBUGAUDIOTRACK.displaymode, True, Panel.DEBUGAUDIOTRACK, signal=gsignal.SELECT2) ,
+                widget.Scrollbar("Break in: ", self.color, Panel.DEBUGAUDIOTRACK.breakin, True, Panel.DEBUGAUDIOTRACK, signal=gsignal.NOACT) ,
+                widget.BoundButton('Save', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION5) ]
+
+        if self.name == "Add Waves":
+            widget_list+= [
+                widget.Scrollbar("Track:", self.color, Panel.DEBUGAUDIOTRACK.tracknames, True, Panel.DEBUGAUDIOTRACK)  ,
+                widget.StaticGraph( self.color, [-1, 1], ["Tempo", "Intensidade"], Panel.DEBUGAUDIOTRACK.trackablegraph, Panel.DEBUGAUDIOTRACK) ,
+                None ,
+                None ,
+                None ,
+                None ,
+                widget.Scrollbar("Display:", self.color, Panel.DEBUGAUDIOTRACK.displaymode, True, Panel.DEBUGAUDIOTRACK, signal=gsignal.SELECT2) ,
+                widget.Scrollbar("Set as:", self.color, gsignal.Trackable(["First Signal", "Second Signal"]), True, Panel.DEBUGAUDIOTRACK, signal=gsignal.SELECT4) ,
+                widget.BoundButton('Save', self.color, Panel.DEBUGAUDIOTRACK, gsignal.ACTION4) ]
+
         '''
         if self.ptype == "Erase":
             widget1= widget.BoundButton("Confirm", self.color, tracable, gsignal.DELETE, )

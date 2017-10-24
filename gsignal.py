@@ -22,6 +22,9 @@ SELECT4= 18
 SELECT5= 19
 ACTION3= 20
 UPDATE= 21
+ACTION4= 22
+NOACT= 23
+ACTION5= 24
         
 def build(paramdict):
     for param in paramdict:

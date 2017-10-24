@@ -272,8 +272,6 @@ class StaticGraph(Widget):
         
     def update(self):
         if ( self.values != self.trackablegraph.content ):
-            print("Debug: estou no update do StaticGraph, atualizando algo")
-
             self.graph= pygame.Surface( ( self.gWIDTH, self.gHEIGTH ) )
             self.values= self.trackablegraph.content
 
@@ -295,8 +293,6 @@ class StaticGraph(Widget):
 
         #draw graph
         for xlength in range(self.gWIDTH-1):
-            #print(self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) ]-(self.min_value )*self.gHEIGTH)
-            
 
             tmp= self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) : int((len(self.values)-1)*((xlength+1)/self.gWIDTH))]
             if (len(tmp) == 0):
@@ -319,7 +315,7 @@ class StaticGraph(Widget):
 
             #pointA= (xlength, int( (self.values[ int((len(self.values)-1)*(xlength/self.gWIDTH)) ]-(self.min_value ) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
             #pointB= (xlength+1, int( (self.values[ int((len(self.values)-1)*((xlength+1)/self.gWIDTH)) ]-(self.min_value) ) * self.gHEIGTH / (self.max_value - self.min_value) ) )
-            
+
             pygame.draw.aaline(self.graph, self.line_color, pointA, pointB)
             
         
@@ -384,7 +380,6 @@ class BoundButton(Widget):
         #draw widget
         pygame.draw.rect(self.canvas, self.color, ( (0, 0), (self.WIDTH, self.HEIGTH) ) )
         self.canvas.blit(temp, (self.TAB,0))
-        
     def gread(self, signal):
         if signal.type == gsignal.CLICK:
             signal= gsignal.build( {
@@ -435,7 +430,6 @@ class Scrollbar(Widget):
 
     def update(self):
         if ( self.tick != self.trackablelist.iterator ):
-            print("Debug: estou no update do Scrollbar, atualizando algo")
             self.retarget()
             self.draw()
         

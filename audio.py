@@ -38,14 +38,16 @@ class AudioTrack:
     #audiotracks tem sequencias de samples em vários canais
 
     tracklist=[]
-    loaded=None
+
     trackablegraph=None
     listeners=[]
     tick= 0
     mode= 0 #0: idle 1: playing 2: recording -1: tests
     recbuffer=[]
     tracknames=gsignal.Trackable([])
+    subtracknames=gsignal.Trackable([])
     displaymode= gsignal.Trackable(["Time Domain", "Frequency Domain"])
+    breakin= gsignal.Trackable(["1", "2"])
 
     def gsend(listener, signal):
             listener.gread(signal)
@@ -55,56 +57,58 @@ class AudioTrack:
         sd.default.samplerate= fs
         sd.default.channels= 1
 
-        #
-        #AudioTrack.tracklist=[
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [697, 1209], 60, '1'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [697, 1336], 60, '2'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [697, 1477], 60, '3'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [697, 1633], 60, 'A'),
 
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [770, 1209], 60, '4'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [770, 1336], 60, '5'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [770, 1477], 60, '6'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [770, 1633], 60, 'B'),
 
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [852, 1209], 60, '7'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [852, 1336], 60, '8'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [852, 1477], 60, '9'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [852, 1633], 60, 'C'),
 
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [941, 1209], 60, '*'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [941, 1336], 60, '0'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [941, 1477], 60, '#'),
-        #    AudioTrack.generate(['sineWave', 'sineWave'], [941, 1633], 60, 'D'),
+        AudioTrack.tracknames= gsignal.Trackable( SysComm.listdirectory("tracks") )
+        AudioTrack.tracknames.content.sort()
 
-        #    AudioTrack.generate(['sineWave'], [523.251], 10, 'Do'),
-        #    AudioTrack.generate(['sineWave'], [587.33], 10, 'Re'),
-        #    AudioTrack.generate(['sineWave'], [659.255], 10, 'Mi'),
-        #    AudioTrack.generate(['sineWave'], [698.456], 10, 'Fa'),
-        #    AudioTrack.generate(['sineWave'], [783.991], 10, 'Sol'),
-        #    AudioTrack.generate(['sineWave'], [880], 10, 'La'),
-        #    AudioTrack.generate(['sineWave'], [987.767], 10, 'Si')
-        #]
+        AudioTrack.subtracknames= gsignal.Trackable( AudioTrack.tracknames.content)
+        AudioTrack.tracklist=[]
 
-        tracknames= SysComm.listdirectory("tracks")
-        tracknames.sort()
-        
-        for name in tracknames:
+        for name in AudioTrack.tracknames.content:
             reader= wave.open("tracks/"+name, "rb")
             AudioTrack.tracklist.append( AudioTrack.generatefromwave(reader, name[:-4]) )
             reader.close()
 
+        AudioTrack.trackablegraph= gsignal.Trackable(AudioTrack.tracklist[0].track)
+
         #TODO:teste modulation
-        tmp= AudioTrack.modulateamplitude(AudioTrack.generate(['sineWave'], [523.251], 240, 'Do'), AudioTrack.generate(['sineWave'], [4000], 240, 'Base'))
-        AudioTrack.tracklist.append(tmp)
-        tmp= AudioTrack.demodulateamplitude(tmp)
-        AudioTrack.tracklist.append(tmp)
+        #tmp= AudioTrack.modulateamplitude(AudioTrack.generate(['sineWave'], [523.251], 240, 'Do'), AudioTrack.generate(['sineWave'], [4000], 240, 'Base'))
+        #AudioTrack.tracklist.append(tmp)
+        #tmp= AudioTrack.demodulateamplitude(tmp)
+        #AudioTrack.tracklist.append(tmp)
 
-        AudioTrack.loaded= AudioTrack.tracklist[0]
-        AudioTrack.trackablegraph= gsignal.Trackable(AudioTrack.loaded.track)
-
-        AudioTrack.updateTrackNames()
         #TODO:Request display para fazer o panel
+        
+
+    #TODO: Este eh um ponto crucial do programa, tenho que certificar que nada errado esta acontecendo aqui
+    #def reload(audiotrack=None):
+    def reload():
+
+        AudioTrack.tracknames.content= SysComm.listdirectory("tracks")
+        AudioTrack.tracknames.content.sort()
+
+        AudioTrack.subtracknames.content= AudioTrack.tracknames.content
+
+        AudioTrack.tracknames.iterator=len(AudioTrack.tracknames.content)-1
+        AudioTrack.subtracknames.iterator= AudioTrack.tracknames.iterator
+        
+        AudioTrack.tracklist=[]
+
+        if (audiotrack == None):
+            for name in AudioTrack.tracknames.content:
+                reader= wave.open("tracks/"+name, "rb")
+                AudioTrack.tracklist.append( AudioTrack.generatefromwave(reader, name[:-4]) )
+                reader.close()
+        else:
+            reader= wave.open("tracks/"+audiotrack.name, "rb")
+            AudioTrack.tracklist.append( AudioTrack.generatefromwave(reader, audiotrack.name[:-4]) )
+            reader.close()
+
+        AudioTrack.trackablegraph.content= AudioTrack.tracklist[0].track
+
+
 
     def __init__(self, channels, name):
         self.channels=channels
@@ -131,8 +135,6 @@ class AudioTrack:
         if (AudioTrack.mode==2 and AudioTrack.tick>=2):
             tmp=AudioTrack.recbuffer[(AudioTrack.tick-2)*728 : (AudioTrack.tick-1)*728]
 
-            print("DEBUG ABABA")
-
             if(AudioTrack.tick%2==0):
                 content= [item for sublist in tmp for item in sublist]
 
@@ -153,18 +155,13 @@ class AudioTrack:
                 signal= gsignal.build( {
                     "type": gsignal.ACTION ,
                     "content": content } )
-                AudioTrack.gsend(AudioTrack.listeners[1], signal)
+                AudioTrack.gsend(AudioTrack.listeners[-1], signal)
             
 
         AudioTrack.tick+= 1
         if(AudioTrack.tick==660):
             AudioTrack.tick-=1
             AudioTrack.mode= 0
-
-    def updateTrackNames():
-        AudioTrack.tracknames.content=[]
-        for track in AudioTrack.tracklist:
-            AudioTrack.tracknames.content.append(track.name)
 
     def save():
         #TODO: pegar o AudioTrack gravado e salvar na tracklist
@@ -175,17 +172,14 @@ class AudioTrack:
             channels[0].append([item for sublist in tmp for item in sublist])
         
         track= AudioTrack(channels, "default-saved")
-        AudioTrack.tracklist.append(track)
         AudioTrack.savetrack(track, track.name)
-
-        AudioTrack.updateTrackNames()
     
     #def playStep(self, step):
     #    sd.play(self.track[step], AudioTrack.fs)
 
     def play():
         #TODO: tratar o caso loaded=None
-        sd.play(AudioTrack.loaded)
+        sd.play( AudioTrack.tracklist[AudioTrack.tracknames.iterator] )
 
     def addSamples(samples):
         result=[]
@@ -345,6 +339,12 @@ class AudioTrack:
 
         writer.close()
 
+        AudioTrack.reload()
+
+        #TODO:Isto eh pouco eficiente, uma vez que me certifiquei que tudoe esta em ordem posso
+        #--usar uma versao reduzida de reload
+        AudioTrack.reload()
+
     def modulateamplitude(audiotrack, audiotrackcarrier):
         #TODO: Checar se ambos os tracks tem o mesmo tamanho e jogar um erro se não
         
@@ -364,18 +364,12 @@ class AudioTrack:
 
         return AudioTrack(channels, "default-modulated")
 
-    def demodulateamplitude(audiotracksignal):
+    def addtracks(audiotrack1, audiotrack2):
         #TODO: Checar se ambos os tracks tem o mesmo tamanho e jogar um erro se não
-        
-        track= []
-        virtualpeak= round( ( audiotracksignal.orderedpeaks()[0] + audiotracksignal.orderedpeaks()[-1] ) / 2) 
-        audiotrackcarrier= AudioTrack.generate(['sineWave'], [virtualpeak], len(audiotracksignal)//728, 'Carrier')
 
-        for i in range(len(audiotrackcarrier)):
-            if audiotrackcarrier[i] != 0:
-                track.append( audiotracksignal[i]*2/audiotrackcarrier[i] - 1 )
-            else:
-                track.append( audiotracksignal[i]*2/0.0000001 - 1 )
+        track= []
+        for i in range(len(audiotrack1)):
+            track.append( audiotrack1[i]+audiotrack2[i] )
 
         channels= []
         channels.append([])
@@ -384,15 +378,47 @@ class AudioTrack:
             channels[0].append(track[j*728 : (j+1)*728])
             j+=1
 
+        return AudioTrack(channels, "default-added")
+
+    def demodulateamplitude(audiotracksignal, breakin):
+        #TODO: Checar se ambos os tracks tem o mesmo tamanho e jogar um erro se não
+        
+        track= []
+        #virtualpeak= round( ( audiotracksignal.orderedpeaks()[0] + audiotracksignal.orderedpeaks()[-1] ) / 2)
+
+        if ( breakin ==  1):
+            orderedpeaks= audiotracksignal.orderedpeaks()
+
+            if (len(orderedpeaks)%2==0):
+                virtualpeak=round( ( audiotracksignal.orderedpeaks()[0] + audiotracksignal.orderedpeaks()[1] ) / 2 )
+            else:
+                virtualpeak=round( audiotracksignal.orderedpeaks()[0] )
+
+            print("virtualpeak ", virtualpeak)
+
+            audiotrackcarrier= AudioTrack.generate(['sineWave'], [virtualpeak], len(audiotracksignal)//728, 'Carrier')
+
+            for i in range(len(audiotrackcarrier)):
+                if audiotrackcarrier[i] != 0:
+                    track.append( audiotracksignal[i]*2/audiotrackcarrier[i] - 1 )
+
+                else:
+                    track.append( audiotracksignal[i]*2/0.0000001 - 1 )
+
+            channels= []
+            channels.append([])
+            j=0
+            while ((j+1)*728) <= len(track):
+                channels[0].append(track[j*728 : (j+1)*728])
+                j+=1
+
         return AudioTrack(channels, "default-demodulated")
         
-
-
     def gread(signal):
         #TODO:Eu preciso uma forma melhor  de ordenar meus listeners, mas por enquanto 0 eh o static e 1 o dynamic
         #TODO: este eh um ponto de falha, mudar os nodes ligados podem mudar a ordem estabelecida
         if signal.type == gsignal.ACTION:
-            AudioTrack.play(AudioTrack.mainload)
+            AudioTrack.play()
 
         if signal.type == gsignal.ACTION2:
             if (AudioTrack.mode == 0):
@@ -407,8 +433,30 @@ class AudioTrack:
                 print("Erro: Não foi iniciar uma gravação, o controlador de áudio está ocupado")
                 #TODO: fazer display gráfico do erro, usar algo estilo toast em android?
 
+        if signal.type == gsignal.ACTION3:
+            #modular o sinal indicado por trackname.iterator e subtrackname.iterator
+            #TODO: consertar um gub bem obvio onde o trackname e o subtrackname vao estar trocados
+            #TODO: sugestao: alterar o modulate de forma que seja simetrico pro carrier e pro signal
+            track= AudioTrack.modulateamplitude(AudioTrack.tracklist[AudioTrack.tracknames.iterator], AudioTrack.tracklist[AudioTrack.subtracknames.iterator])
+
+            AudioTrack.savetrack(track, track.name)
+
+        if signal.type == gsignal.ACTION4:
+            track= AudioTrack.addtracks(AudioTrack.tracklist[AudioTrack.tracknames.iterator], AudioTrack.tracklist[AudioTrack.subtracknames.iterator])
+
+            AudioTrack.savetrack(track, track.name)
+
+        if signal.type == gsignal.ACTION5:
+            #TODO:eventualmente atualizar o demodulate de forma que não preciso informar o breakin
+            track= AudioTrack.demodulateamplitude(AudioTrack.tracklist[AudioTrack.tracknames.iterator], AudioTrack.breakin.iterator+1)
+
+            AudioTrack.savetrack(track, track.name)
+
         if signal.type == gsignal.SELECT4:
-            AudioTrack.mainload= signal.content
+            #Trocar o tracknames com o subtracknames
+            hold= AudioTrack.tracknames.iterator
+            AudioTrack.tracknames.iterator= AudioTrack.subtracknames.iterator
+            AudioTrack.subtracknames.iterator=hold
             
 
         if signal.type == gsignal.SAVE:
@@ -422,20 +470,22 @@ class AudioTrack:
 
         if signal.type == gsignal.SELECT:
 
-            AudioTrack.loaded=AudioTrack.tracklist[signal.content]
+            audiotrack= AudioTrack.tracklist[signal.content]
 
             if ( AudioTrack.displaymode.iterator == 0 ):
-                AudioTrack.trackablegraph.content= AudioTrack.loaded.track
+                AudioTrack.trackablegraph.content= audiotrack.track
             else:
-                AudioTrack.trackablegraph.content= AudioTrack.loaded.fourier
+                AudioTrack.trackablegraph.content= audiotrack.fourier
 
-            AudioTrack.detectTone(AudioTrack.loaded.fourier)
+            AudioTrack.detectTone(audiotrack.fourier)
 
         if signal.type == gsignal.SELECT2:
+            audiotrack= AudioTrack.tracklist[AudioTrack.tracknames.iterator]
+
             if ( AudioTrack.displaymode.iterator == 0 ):
-                AudioTrack.trackablegraph.content= AudioTrack.loaded.track
+                AudioTrack.trackablegraph.content= audiotrack.track
             else:
-                AudioTrack.trackablegraph.content= AudioTrack.loaded.fourier
+                AudioTrack.trackablegraph.content= audiotrack.fourier
 
     def __getitem__(self, key):
         if (self.displayfourier):
